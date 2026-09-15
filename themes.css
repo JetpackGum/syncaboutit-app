@@ -1,0 +1,120 @@
+/* Shared semantic colors. Individual note colors remain independent of the app theme. */
+:root, [data-theme="slate"] {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --sidebar: #eceef2;
+  --surface: #ffffff;
+  --surface-soft: #edf0f4;
+  --text: #303746;
+  --heading: #242c3b;
+  --muted: #606b7c;
+  --subtle: #707b8c;
+  --line: #d9dee6;
+  --accent: #4e607e;
+  --accent-hover: #3a4b68;
+  --accent-soft: #dfe6f0;
+  --on-accent: #ffffff;
+  --brand-dot: #ced9ed;
+  --paper: #ffffff;
+  --sage: #e5ecdf;
+  --peach: #fae9dd;
+  --lavender: #ebe7f2;
+  --sky: #e3edf0;
+  --sand: #f1ecd8;
+  --shadow: #18243b14;
+  --backdrop: #15203566;
+}
+[data-theme="ocean"] {
+  color-scheme: light;
+  --bg: #f1f6fb;
+  --sidebar: #e5eef7;
+  --surface: #fcfdff;
+  --surface-soft: #eaf1f9;
+  --text: #2c4057;
+  --heading: #193b61;
+  --muted: #516e8a;
+  --subtle: #607994;
+  --line: #cfdeec;
+  --accent: #2266a4;
+  --accent-hover: #194e80;
+  --accent-soft: #d4e5f7;
+  --brand-dot: #b8dffc;
+}
+[data-theme="rose"] {
+  color-scheme: light;
+  --bg: #faf4f3;
+  --sidebar: #f3e8e7;
+  --surface: #fffaf9;
+  --surface-soft: #f6eceb;
+  --text: #513c42;
+  --heading: #593540;
+  --muted: #80616a;
+  --subtle: #8d6c76;
+  --line: #e8d5d8;
+  --accent: #a14f69;
+  --accent-hover: #823d53;
+  --accent-soft: #f0dce3;
+  --brand-dot: #f3c9d6;
+  --paper: #fffaf9;
+}
+[data-theme="sage"] {
+  color-scheme: light;
+  --bg: #f6f5f0;
+  --sidebar: #eeefe7;
+  --surface: #fffef9;
+  --surface-soft: #edf0e7;
+  --text: #343a33;
+  --heading: #35432f;
+  --muted: #66735c;
+  --subtle: #727e68;
+  --line: #dce1d3;
+  --accent: #45654e;
+  --accent-hover: #38583f;
+  --accent-soft: #dfe5d5;
+  --brand-dot: #d5de87;
+  --paper: #fffef8;
+}
+[data-theme="midnight"] {
+  color-scheme: dark;
+  --bg: #171b24;
+  --sidebar: #1d2330;
+  --surface: #242c3b;
+  --surface-soft: #293244;
+  --text: #e0e6f1;
+  --heading: #f2f5fd;
+  --muted: #bbc7dc;
+  --subtle: #a5b4ce;
+  --line: #3e4c64;
+  --accent: #a5b9f6;
+  --accent-hover: #c3d1fc;
+  --accent-soft: #354363;
+  --on-accent: #17213a;
+  --brand-dot: #42599b;
+  --paper: #242c3b;
+  --sage: #293d35;
+  --peach: #46332e;
+  --lavender: #383249;
+  --sky: #253c4b;
+  --sand: #403c2c;
+  --shadow: #00000030;
+  --backdrop: #050914a6;
+}
+
+.theme-picker { border: 0; padding: 0 0 20px; margin: 8px 0 22px; border-bottom: 1px solid var(--line); min-width: 0; }
+.theme-picker legend { font-size: 14px; font-weight: 600; padding: 0; }
+.theme-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.theme-option { position: relative; cursor: pointer; border: 2px solid var(--line); border-radius: 9px; padding: 10px; background: var(--surface); color: var(--text); }
+.theme-option:hover { border-color: var(--accent); }
+.theme-option:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme-option:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.theme-option input { position: absolute; right: 8px; bottom: 27px; width: 14px; height: 14px; margin: 0; accent-color: var(--accent); }
+.theme-preview { height: 49px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; display: flex; align-items: center; gap: 5px; padding: 8px; border-left: 14px solid var(--sidebar); margin-bottom: 10px; }
+.theme-preview span { height: 26px; flex: 1; background: var(--accent-soft); border-radius: 3px; }
+.theme-preview span:first-child { background: var(--accent); }
+.theme-preview span:last-child { background: var(--surface); border: 1px solid var(--line); }
+.theme-name { display: block; font-size: 12px; font-weight: 600; padding-right: 18px; }
+.theme-option small { display: block; font-size: 10px; color: var(--muted); margin-top: 4px; }
+#theme-status:empty { display: none; }
+.settings-section .agent-toggle + .agent-toggle { margin-top: 12px; }
+#ai-permissions-status:empty { display: none; }
+@media (max-width: 480px) { .theme-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="Your notes, lists, and little things to come back to. Saved locally, synced with your Google Drive.">
+  <title>SyncAboutIt — A little less on your mind</title>
+  <link rel="icon" href="./icons/icon-16.png" type="image/png" sizes="16x16">
+  <link rel="icon" href="./icons/icon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" sizes="180x180">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <script src="./theme.js"></script>
+  <link rel="stylesheet" href="./themes.css">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./markdown.css">
+  <link rel="stylesheet" href="./workspace.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <aside class="sidebar" id="navigation" aria-label="Workspace navigation">
+    <button id="close-navigation" class="icon-button" aria-label="Close navigation">×</button>
+    <a class="brand" href="./index.html"><img class="brand-logo" src="./icons/icon-128.png" width="36" height="36" alt=""><span>syncaboutit<span class="brand-period">.</span></span></a>
+    <div class="workspace-label">YOUR LITTLE HEADSPACE</div>
+    <nav aria-label="Notes views">
+      <button class="nav-button active" data-view="notes"><span data-icon="notes"></span> All notes <span id="note-count" class="count">0</span></button>
+      <button class="nav-button" data-view="unfiled"><span data-icon="folder"></span> Unfiled</button>
+      <button class="nav-button" data-view="reminders"><span data-icon="bell"></span> Reminders</button>
+      <button class="nav-button" data-view="opportunities"><span data-icon="pin"></span> Opportunities</button>
+      <button class="nav-button" data-view="agents"><span data-icon="spark"></span> Shared with AI</button>
+      <button class="nav-button" data-view="conflicts" id="conflicts-nav" hidden><span data-icon="restore"></span> Needs review <span id="conflict-count" class="count">0</span></button>
+      <div class="nav-divider"></div>
+      <div class="labels-heading folders-heading">FOLDERS <button id="add-folder" class="icon-button" aria-label="Create folder">+</button></div>
+      <div id="folders-nav"></div>
+      <div class="nav-divider"></div>
+      <div class="labels-heading">LABELS <button id="add-label" class="icon-button" aria-label="Create a labeled note">+</button></div>
+      <div id="labels-nav"></div>
+      <div class="nav-divider"></div>
+      <button class="nav-button" data-view="archive"><span data-icon="archive"></span> Archive</button>
+      <button class="nav-button" data-view="trash"><span data-icon="trash"></span> Trash</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="drive-card"><div class="drive-heading"><span class="status-dot"></span><strong id="drive-status">Saved on this device</strong></div><p id="drive-detail">A little peace of mind. Connect Drive to take your notes with you.</p><button id="connect-drive">Connect Google Drive <span>↗</span></button></div>
+      <button id="settings-button" class="nav-button"><span data-icon="settings"></span> Settings & connections</button>
+      <div class="local-footer"><span class="avatar">Y</span><span>Your personal space<small>Local first. Yours always.</small></span></div>
+    </div>
+  </aside>
+  <div id="navigation-backdrop" hidden></div>
+  <div class="main-shell">
+    <header class="topbar"><button id="open-navigation" class="icon-button" aria-label="Open navigation" aria-controls="navigation" aria-expanded="false"><span data-icon="menu"></span></button><nav class="breadcrumb" id="breadcrumbs" aria-label="Breadcrumb"><strong id="breadcrumb-view">All notes</strong></nav><div class="top-actions"><span id="save-status" role="status"><span class="status-dot"></span> Saved locally</span><button id="sync-button" class="icon-button" aria-label="Sync notes with Google Drive" title="Sync with Google Drive"><span data-icon="sync"></span></button><button id="mobile-settings" class="icon-button" aria-label="Settings and connections"><span data-icon="settings"></span></button></div></header>
+    <main>
+      <div class="page-heading"><div><h1 id="view-title">All notes</h1><p id="view-description">Your notes, lists, and documents.</p></div><div class="page-actions"><button id="new-note" class="primary" popovertarget="create-menu"><span>+</span> New</button><div id="create-menu" class="action-popover" popover><button data-create="note"><span data-icon="notes"></span>Note</button><button data-create="list"><span data-icon="checklist"></span>Checklist</button><button data-create="markdown"><span data-icon="edit"></span>Markdown document</button><hr><button id="import-markdown"><span data-icon="import"></span>Import Markdown</button></div><input id="markdown-file" type="file" accept=".md,.markdown,text/markdown,text/plain" hidden></div></div>
+      <div class="toolbar"><label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Search all notes" aria-label="Search notes"><kbd>/</kbd></label><label class="sr-only" for="search-scope">Search scope</label><select id="search-scope"><option value="view">This view</option><option value="all">All active notes</option></select><label class="sr-only" for="sort-notes">Sort notes</label><select id="sort-notes"><option value="updated">Recently edited</option><option value="title">Title A–Z</option><option value="created">Newest first</option></select><button id="select-notes" class="secondary" aria-pressed="false">Select</button><button id="layout-button" class="icon-button layout-toggle" aria-label="Switch to list layout" title="Switch to list layout"><span data-icon="rows"></span></button></div>
+      <div id="search-summary" class="search-summary" hidden><span id="search-results" role="status" aria-live="polite"></span><button id="clear-search" class="text-button">Clear search</button></div>
+      <div class="quick-capture"><span class="capture-dot">+</span><input id="quick-title" placeholder="Something to remember?" aria-label="Quick note title"><button id="quick-list" class="icon-button" aria-label="Create checklist" title="Make a list"><span data-icon="checklist"></span></button><button id="quick-add" class="text-button">Add note <span>↵</span></button></div>
+      <div id="view-notice" class="notice" hidden></div>
+      <div id="folder-bar" class="folder-bar" hidden></div>
+      <div id="bulk-toolbar" class="bulk-toolbar" hidden><label class="check-label"><input id="select-all" type="checkbox"> <span id="selection-count">0 selected</span></label><button id="bulk-move" class="secondary" disabled>Move</button><button id="bulk-label" class="secondary" disabled>Add labels</button><button id="cancel-selection" class="text-button">Cancel</button></div>
+      <section id="notes-container" aria-label="Your notes"></section>
+      <div id="empty-state" class="empty-state" hidden><div class="empty-art"><span data-icon="notes"></span><span class="empty-spark">✦</span></div><h2>A little space to think.</h2><p>Add your first note, start a shopping list,<br>or save an idea for another day.</p><button id="empty-create" class="primary">Write something down <span>↗</span></button><button id="load-examples" class="text-button">Or try a few example notes</button></div>
+      <footer class="page-footer"><span class="mini-brand">s•</span> Let your notes do the remembering.</footer>
+    </main>
+  </div>
+  <dialog id="editor" aria-labelledby="editor-heading">
+    <form id="editor-form">
+      <div class="dialog-top"><span id="editor-heading">New note</span><div class="button-row"><button type="button" id="expand-editor" class="secondary" aria-pressed="false">Expand</button><button type="button" data-close="editor" class="icon-button" aria-label="Close editor">×</button></div></div>
+      <input id="edit-title" class="edit-title" placeholder="Give it a title" aria-label="Note title" maxlength="300">
+      <div class="type-toggle" role="group" aria-label="Note format"><button type="button" data-kind="note">Note</button><button type="button" data-kind="list">Checklist</button><button type="button" data-kind="markdown">Markdown</button></div>
+      <div id="markdown-modes" class="type-toggle" role="group" aria-label="Markdown mode" hidden><button type="button" data-markdown-mode="write" aria-pressed="true">Write</button><button type="button" data-markdown-mode="preview" aria-pressed="false">Preview</button></div>
+      <textarea id="edit-body" placeholder="Start anywhere…" aria-label="Note content" rows="7"></textarea>
+      <section id="edit-markdown-preview" class="markdown-preview markdown-body" aria-label="Formatted Markdown preview" hidden></section>
+      <div id="edit-items"></div><button id="add-item" type="button" class="text-button">+ Add an item</button>
+      <div id="edit-sources"></div>
+      <details id="organize-note" class="editor-details"><summary><span data-icon="folder"></span> Folder, labels & color <span id="organization-summary"></span></summary>
+      <div class="editor-folder-row"><label class="field-label">Folder<select id="edit-folder"><option value="">No folder</option></select></label><button id="edit-create-folder" type="button" class="secondary">+ New folder</button></div>
+      <label class="field-label">Labels<input id="edit-labels" placeholder="Add labels, separated by commas" maxlength="500" autocomplete="off" list="label-suggestions"></label><datalist id="label-suggestions"></datalist>
+      <div class="editor-options"><div id="color-options" aria-label="Note color"></div><label class="check-label"><input id="edit-pinned" type="checkbox"> Pin note</label></div>
+      </details>
+      <details class="reminder-details editor-details"><summary><span data-icon="bell"></span> Reminder <span id="reminder-summary"></span></summary><label class="field-label">Remind me<select id="reminder-type"><option value="none">No reminder</option><option value="time">At a date & time</option><option value="opportunity">When I’m near a place (Opportunity)</option></select></label><div id="time-fields" hidden><input id="reminder-at" type="datetime-local" aria-label="Reminder date and time"><p class="field-help">Browser reminders need this app open. The Android app can notify you in the background.</p></div><div id="opportunity-fields" hidden><label class="field-label">What do you want to find?<input id="reminder-query" placeholder="e.g. a warm white desk lamp" maxlength="300"></label><label class="field-label">Where would you look?<input id="reminder-place" placeholder="e.g. a furniture or hardware store" maxlength="300"></label><p class="field-help">Share this note with AI to receive place suggestions. After accepting a place, confirm it in the Android app to start monitoring on that phone.</p></div></details>
+      <details class="editor-details" id="sharing-options"><summary><span data-icon="spark"></span> AI access <span id="sharing-summary"></span></summary>
+      <label class="agent-toggle"><span data-icon="spark"></span><span><strong>Share with AI agents</strong><small id="edit-ai-help">Connected agents can read this note and add checklist items.</small></span><input id="edit-shared" type="checkbox" role="switch"></label>
+      </details>
+      <div class="dialog-footer"><span id="edit-meta" role="status" aria-live="polite">New note · not saved</span><button type="button" class="secondary" data-close="editor">Cancel</button><button type="submit" class="primary">Save changes</button></div>
+    </form>
+  </dialog>
+  <dialog id="settings-dialog" aria-labelledby="settings-heading">
+    <div class="dialog-top"><h2 id="settings-heading">Settings</h2><button data-close="settings-dialog" class="icon-button" aria-label="Close settings">×</button></div>
+    <nav class="settings-navigation" aria-label="Settings sections"><button data-settings="appearance" aria-current="page">Appearance</button><button data-settings="sync">Sync & accounts</button><button data-settings="ai">AI access</button><button data-settings="reminders">Reminders</button><button data-settings="data">Data</button><button data-settings="folders">Folders</button></nav>
+    <section data-settings-panel="appearance" aria-label="Appearance">
+    <fieldset class="theme-picker"><legend>Appearance</legend><p class="field-help">Choose a theme for this device. Changes apply immediately.</p><div class="theme-options">
+      <label class="theme-option" data-theme="slate"><input type="radio" name="theme" value="slate"><span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span><span class="theme-name">Slate</span><small>Clean & neutral</small></label>
+      <label class="theme-option" data-theme="ocean"><input type="radio" name="theme" value="ocean"><span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span><span class="theme-name">Ocean</span><small>Cool blue</small></label>
+      <label class="theme-option" data-theme="rose"><input type="radio" name="theme" value="rose"><span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span><span class="theme-name">Rose</span><small>Warm & soft</small></label>
+      <label class="theme-option" data-theme="midnight"><input type="radio" name="theme" value="midnight"><span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span><span class="theme-name">Midnight</span><small>Easy after dark</small></label>
+      <label class="theme-option" data-theme="sage"><input type="radio" name="theme" value="sage"><span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span><span class="theme-name">Sage</span><small>Original green</small></label>
+    </div><p id="theme-status" class="field-help" role="status" aria-live="polite"></p></fieldset>
+    </section>
+    <section data-settings-panel="sync" aria-label="Sync and accounts" hidden><h3>Sync & accounts</h3><p id="connection-summary" class="field-help"></p><div class="button-row"><button id="settings-connect" class="primary">Connect Google Drive</button><button id="disconnect" class="secondary">Disconnect Drive</button></div><details id="connection-setup" class="editor-details"><summary>Google Drive setup</summary>
+    <p class="settings-intro">Your notes live on your device. Connect your own Google Drive to carry them between devices.</p>
+    <form id="settings-form"><label class="field-label">Google OAuth client ID<input id="client-id" placeholder="Your client ID.apps.googleusercontent.com" autocomplete="off"></label><p class="field-help">Use a Web application OAuth client in your Google Cloud project with the Drive API enabled. Register this exact redirect URI:</p><code id="redirect-uri" class="copy-code"></code><button class="primary" type="submit">Save connection settings</button></form>
+    </details></section>
+    <section class="settings-section" data-settings-panel="ai" aria-label="AI access" hidden><h3>AI access</h3>
+      <label class="agent-toggle"><span data-icon="notes"></span><span><strong>Automatically allow AI to view notes</strong><small>Connected agents can read all active notes without individual sharing. Archive and Trash are excluded.</small></span><input id="ai-auto-view" type="checkbox" role="switch" aria-label="Automatically allow AI to view notes" data-permission="readAll"></label>
+      <label class="agent-toggle"><span data-icon="edit"></span><span><strong>Automatically allow AI to make notes</strong><small>Connected agents can create new notes and checklists. Reading and editing existing notes have separate permissions.</small></span><input id="ai-auto-create" type="checkbox" role="switch" aria-label="Automatically allow AI to make notes" data-permission="createNotes"></label>
+      <p class="field-help">These settings apply to all connected agents after syncing with Drive. Adding items to an existing list still requires sharing that list. Your AI client may also have its own approval settings.</p>
+      <p id="ai-permissions-status" class="field-help" role="status" aria-live="polite"></p>
+      <details class="editor-details"><summary>Agent connection setup</summary><p>Use the same Google Cloud project for browser and agent sign-in.</p><code class="copy-code">npm run agent:auth<br>npm run agent</code><p class="field-help">See README.md for the OAuth setup and MCP configuration. No AI provider key is needed for the note tools.</p></details></section>
+    <section class="settings-section" data-settings-panel="data" aria-label="Data" hidden><h3>Your data</h3><div class="button-row"><button id="export" class="secondary">Export backup</button><button id="import" class="secondary">Import backup</button></div><input id="import-file" type="file" accept="application/json,.json" hidden><p class="field-help">Backups contain notes, folders, and AI permissions. Google Drive app data is private to this app and doesn’t appear as a normal Drive folder.</p></section>
+    <section class="settings-section" data-settings-panel="folders" aria-label="Folders" hidden><h3>Folders</h3><p>Each note belongs to one folder and can have several labels. Deleting a folder moves its notes and subfolders up a level.</p><button id="settings-add-folder" class="secondary">Create folder</button><div id="manage-folders"></div></section>
+    <section class="settings-section" data-settings-panel="reminders" aria-label="Reminders" hidden><h3>Reminders</h3><button id="enable-notifications" class="secondary">Enable browser notifications</button><p class="field-help">Browser notifications require this app to stay open. The Android app supports background time reminders and monitors places you confirm on that phone. Manage phone permissions in the Android app.</p></section>
+  </dialog>
+  <dialog id="bulk-dialog" aria-labelledby="bulk-heading"><form id="bulk-form"><div class="dialog-top"><h2 id="bulk-heading">Organize notes</h2><button type="button" data-close="bulk-dialog" class="icon-button" aria-label="Cancel bulk action">×</button></div><p id="bulk-description" class="field-help"></p><label id="bulk-folder-field" class="field-label">Move to folder<select id="bulk-folder"></select></label><label id="bulk-label-field" class="field-label" hidden>Add labels<input id="bulk-labels" maxlength="500" placeholder="Labels, separated by commas"></label><div class="dialog-footer"><button type="button" data-close="bulk-dialog" class="secondary">Cancel</button><button type="submit" class="primary">Apply</button></div></form></dialog>
+  <dialog id="discard-dialog" aria-labelledby="discard-heading"><div class="dialog-top"><h2 id="discard-heading">Discard unsaved changes?</h2></div><p class="field-help">Your edits haven’t been saved yet.</p><div class="dialog-footer"><button id="keep-editing" class="secondary">Keep editing</button><button id="discard-changes" class="primary">Discard changes</button></div></dialog>
+  <dialog id="folder-dialog" aria-labelledby="folder-heading"><form id="folder-form"><div class="dialog-top"><h2 id="folder-heading">A home for related thoughts.</h2><button type="button" data-close="folder-dialog" class="icon-button" aria-label="Cancel folder">×</button></div><label class="field-label">Folder name<input id="folder-name" placeholder="e.g. Home office project" maxlength="100" required></label><label class="field-label">Inside<select id="folder-parent"><option value="">Top level</option></select></label><div class="dialog-footer"><button type="button" data-close="folder-dialog" class="secondary">Cancel</button><button type="submit" class="primary">Save folder</button></div></form></dialog>
+  <dialog id="clip-dialog" aria-labelledby="clip-heading"><form id="clip-form"><div class="dialog-top"><h2 id="clip-heading">Keep a little of the web.</h2><button type="button" data-close="clip-dialog" class="icon-button" aria-label="Cancel web clip">×</button></div><p id="clip-preview" class="clip-preview"></p><div id="clip-source" class="source-block"></div><label class="field-label">Add to<select id="clip-destination"></select></label><div id="clip-new-fields"><label class="field-label">Title<input id="clip-title" maxlength="300" placeholder="Shopping list, project note…"></label><label class="field-label">Folder or project<select id="clip-folder"><option value="">No folder</option></select></label></div><p class="field-help">A checklist gets a new item. A note gets the selection appended to its body. The original selection, source page, page title, and capture date stay attached.</p><div class="dialog-footer"><button type="button" data-close="clip-dialog" class="secondary">Cancel</button><button type="submit" class="primary">Save clip</button></div></form></dialog>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
