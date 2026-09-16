@@ -26,7 +26,7 @@ export function validateOperation(op) {
       if (key === 'reminder' && value !== null) {
         if (!value || typeof value !== 'object' || !['time', 'opportunity'].includes(value.type)) throw new Error('Invalid reminder.');
         if (value.type === 'time' && !Number.isFinite(Date.parse(value.at))) throw new Error('Choose a valid reminder date.');
-        if (value.type === 'opportunity' && (!isText(value.query, 300) || !isText(value.place, 300))) throw new Error('Invalid opportunity.');
+        if (value.type === 'opportunity' && (!isText(value.query, 300) || !isText(value.place, 300) || (value.near !== undefined && !isText(value.near, 300)))) throw new Error('Invalid opportunity.');
       }
     }
   } else if (op.type === 'permissions.patch') {

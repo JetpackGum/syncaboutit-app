@@ -212,7 +212,7 @@ function renderKind() {
 }
 function renderColors() { $('#color-options').innerHTML = COLORS.map(c => `<button type="button" class="color-swatch ${color === c ? 'selected' : ''}" style="--swatch:var(--${c})" data-color="${c}" aria-label="${c} color" aria-pressed="${color === c}"></button>`).join(''); }
 function reminderFields() { const type = $('#reminder-type').value; $('#time-fields').hidden = type !== 'time'; $('#opportunity-fields').hidden = type !== 'opportunity'; $('#reminder-summary').textContent = type === 'time' ? 'Date & time' : type === 'opportunity' ? 'Nearby place' : 'None'; }
-function openEditor(note = null, mode = 'note', title = '') {
+async function openEditor(note = null, mode = 'note', title = '') {
   closeNavigation(false);
   markdownMode = 'write';
   current = note ? structuredClone(note) : null;
@@ -228,6 +228,7 @@ function openEditor(note = null, mode = 'note', title = '') {
   $('#reminder-type').value = note ? reminder?.type || 'none' : (view === 'opportunities' ? 'opportunity' : view === 'reminders' ? 'time' : 'none');
   $('#reminder-at').value = reminder?.type === 'time' ? new Date(new Date(reminder.at).getTime() - new Date(reminder.at).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
   $('#reminder-query').value = reminder?.query || ''; $('#reminder-place').value = reminder?.place || '';
+  $('#reminder-near').value = reminder?.near || (note ? '' : await settings.get('homeArea') || '');
   $('#opportunity-proposals').innerHTML = note ? proposalsHtml(note) : '';
   $('.reminder-details').open = $('#reminder-type').value !== 'none';
   $('#editor-heading').textContent = note ? 'Edit note' : 'New note';
@@ -250,7 +251,8 @@ $('#editor-form').addEventListener('submit', attempt(async event => {
     }
     if ($('#reminder-type').value === 'opportunity') {
       if (!$('#reminder-query').value.trim()) throw new Error('Add what you’d like to find.');
-      reminder = { type: 'opportunity', query: $('#reminder-query').value.trim(), place: $('#reminder-place').value.trim() };
+      const near = $('#reminder-near').value.trim();
+      reminder = { type: 'opportunity', query: $('#reminder-query').value.trim(), place: $('#reminder-place').value.trim(), ...(near ? { near } : {}) };
     }
     const values = { title: $('#edit-title').value.trim(), body: $('#edit-body').value, kind, color, labels: [...new Set($('#edit-labels').value.split(',').map(x => x.trim()).filter(Boolean))], folderId: $('#edit-folder').value || null, pinned: $('#edit-pinned').checked, agentShared: $('#edit-shared').checked, reminder };
     // Write only edited fields, preserving unrelated changes that arrived while editing.
@@ -335,7 +337,8 @@ function renderAiPermissions() {
   $('#ai-auto-create').checked = aiPermissions.createNotes;
   $('#edit-ai-help').textContent = aiPermissions.readAll ? 'AI can already view active notes. Sharing also allows checklist additions.' : 'Connected agents can read this note and add checklist items.';
 }
-async function openSettings(section = 'appearance') { closeNavigation(false); $('#client-id').value = await settings.get('googleClientId') || ''; $('#redirect-uri').textContent = redirectUri(); aiPermissions = materializeAgentPermissions(await allOperations()); renderAiPermissions(); renderFolderManager(); showSettings(section); await updateConnectionSettings(); if (!$('#settings-dialog').open) $('#settings-dialog').showModal(); }
+async function openSettings(section = 'appearance') { closeNavigation(false); $('#client-id').value = await settings.get('googleClientId') || ''; $('#redirect-uri').textContent = redirectUri(); $('#home-area').value = await settings.get('homeArea') || ''; aiPermissions = materializeAgentPermissions(await allOperations()); renderAiPermissions(); renderFolderManager(); showSettings(section); await updateConnectionSettings(); if (!$('#settings-dialog').open) $('#settings-dialog').showModal(); }
+$('#home-area').onchange = attempt(async () => { await settings.set('homeArea', $('#home-area').value.trim()); });
 document.querySelectorAll('[data-permission]').forEach(input => {
   input.onchange = attempt(async () => {
     const enabled = input.checked;
@@ -616,7 +619,7 @@ $('#bulk-form').onsubmit = attempt(async event => {
 function editorState() {
   return JSON.stringify({ title: $('#edit-title').value, body: $('#edit-body').value, labels: $('#edit-labels').value,
     folder: $('#edit-folder').value, pinned: $('#edit-pinned').checked, shared: $('#edit-shared').checked,
-    reminder: $('#reminder-type').value, at: $('#reminder-at').value, query: $('#reminder-query').value, place: $('#reminder-place').value,
+    reminder: $('#reminder-type').value, at: $('#reminder-at').value, query: $('#reminder-query').value, place: $('#reminder-place').value, near: $('#reminder-near').value,
     kind, color, items: draftItems });
 }
 function editorDirty() { return editorState() !== editorBaseline; }
