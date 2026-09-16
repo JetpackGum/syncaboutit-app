@@ -212,7 +212,7 @@ function renderKind() {
 }
 function renderColors() { $('#color-options').innerHTML = COLORS.map(c => `<button type="button" class="color-swatch ${color === c ? 'selected' : ''}" style="--swatch:var(--${c})" data-color="${c}" aria-label="${c} color" aria-pressed="${color === c}"></button>`).join(''); }
 function reminderFields() { const type = $('#reminder-type').value; $('#time-fields').hidden = type !== 'time'; $('#opportunity-fields').hidden = type !== 'opportunity'; $('#reminder-summary').textContent = type === 'time' ? 'Date & time' : type === 'opportunity' ? 'Nearby place' : 'None'; }
-async function openEditor(note = null, mode = 'note', title = '') {
+async function openEditor(note = null, mode = 'note', title = '', initialReminderType = null) {
   closeNavigation(false);
   markdownMode = 'write';
   current = note ? structuredClone(note) : null;
@@ -225,7 +225,7 @@ async function openEditor(note = null, mode = 'note', title = '') {
   draftItems = structuredClone(note?.items || []);
   if (kind === 'list' && !draftItems.length) draftItems.push({ id: crypto.randomUUID(), text: '', checked: false, order: 0 });
   const reminder = note?.reminder;
-  $('#reminder-type').value = note ? reminder?.type || 'none' : (view === 'opportunities' ? 'opportunity' : view === 'reminders' ? 'time' : 'none');
+  $('#reminder-type').value = note ? reminder?.type || 'none' : (initialReminderType || (view === 'opportunities' ? 'opportunity' : view === 'reminders' ? 'time' : 'none'));
   $('#reminder-at').value = reminder?.type === 'time' ? new Date(new Date(reminder.at).getTime() - new Date(reminder.at).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
   $('#reminder-query').value = reminder?.query || ''; $('#reminder-place').value = reminder?.place || '';
   $('#reminder-near').value = reminder?.near || (note ? '' : await settings.get('homeArea') || '');
@@ -286,11 +286,11 @@ document.querySelectorAll('[data-view]').forEach(el => { el.onclick = attempt(as
 $('#labels-nav').onclick = attempt(async event => { const el = event.target.closest('[data-label]'); if (el) await navigate(`label:${el.dataset.label}`); });
 $('#search').oninput = attempt(async event => { query = event.target.value.toLowerCase().trim(); await render(); });
 $('#empty-create').onclick = () => openEditor();
-document.querySelectorAll('[data-create]').forEach(el => { el.onclick = () => { $('#create-menu').hidePopover(); openEditor(null, el.dataset.create); }; });
+document.querySelectorAll('[data-create]').forEach(el => { el.onclick = () => { $('#create-menu').hidePopover(); openEditor(null, el.dataset.create, '', el.dataset.reminder || null); }; });
 $('#quick-list').onclick = () => openEditor(null, 'list', $('#quick-title').value);
 $('#quick-add').onclick = () => openEditor(null, 'note', $('#quick-title').value);
 $('#quick-title').onkeydown = event => { if (event.key === 'Enter') openEditor(null, 'note', event.target.value); };
-$('#add-label').onclick = () => { openEditor(); $('#organize-note').open = true; $('#edit-labels').focus(); };
+$('#add-label').onclick = async () => { await openEditor(); $('#organize-note').open = true; $('#edit-labels').focus(); };
 $('#import-markdown').onclick = () => { $('#create-menu').hidePopover(); $('#markdown-file').click(); };
 $('#markdown-file').onchange = attempt(async event => {
   const file = event.target.files?.[0]; if (!file) return;
