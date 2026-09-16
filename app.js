@@ -337,7 +337,7 @@ document.querySelectorAll('[data-permission]').forEach(input => {
 });
 $('#settings-button').onclick = $('#mobile-settings').onclick = attempt(() => openSettings());
 $('#settings-form').onsubmit = attempt(async event => { event.preventDefault(); const id = $('#client-id').value.trim(); if (id && !id.endsWith('.apps.googleusercontent.com')) throw new Error('Enter a valid Google OAuth client ID.'); await settings.set('googleClientId', id); toast('Connection settings saved.'); });
-const connectDrive = attempt(async () => { if (await isConnected()) { await sync(true); await updateConnectionSettings(); return; } if (!await settings.get('googleClientId')) { await openSettings('sync'); $('#connection-setup').open = true; $('#client-id').focus(); return; } await connect(); await status(); await sync(true); await updateConnectionSettings(); });
+const connectDrive = attempt(async () => { if (await isConnected()) { await sync(true); await updateConnectionSettings(); return; } await connect(); await status(); await sync(true); await updateConnectionSettings(); });
 $('#settings-connect').onclick = connectDrive;
 $('#connect-drive').onclick = connectDrive;
 $('#sync-button').onclick = connectDrive;

@@ -1,5 +1,9 @@
 import { settings } from './store.js';
 import { DRIVE_SCOPE } from './drive.js';
+// SyncAboutIt's own Web application OAuth client (public by design, not a secret -- see docs/google-connection.md).
+// Used unless the user sets their own in Settings, so Connect Google Drive works with no setup for everyone
+// installing the extension or hosted app; a self-hosted deployment can still override it.
+export const DEFAULT_GOOGLE_CLIENT_ID = '489250154174-a4ak4smjdf05ih9kuivkpenov4a701h4.apps.googleusercontent.com';
 const extension = !!globalThis.chrome?.identity;
 export const redirectUri = () => extension ? chrome.identity.getRedirectURL() : `${location.origin}${location.pathname}`;
 const tokenStore = {
@@ -40,8 +44,7 @@ export async function finishSignIn() {
   return false;
 }
 export async function connect() {
-  const clientId = await settings.get('googleClientId');
-  if (!clientId?.endsWith('.apps.googleusercontent.com')) throw new Error('Add your Google OAuth client ID in Settings first.');
+  const clientId = (await settings.get('googleClientId')) || DEFAULT_GOOGLE_CLIENT_ID;
   const state = crypto.randomUUID();
   const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri(), response_type: 'token', scope: DRIVE_SCOPE, state, prompt: 'select_account consent' });
   const url = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
