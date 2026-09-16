@@ -42,7 +42,7 @@ const views = {
   notes: ['All notes', 'All notes', 'Your notes, lists, and documents.'],
   unfiled: ['Unfiled', 'Unfiled', 'Notes that haven’t been added to a folder.'],
   reminders: ['Reminders', 'Reminders', 'What needs your attention, in time order.'],
-  opportunities: ['Opportunities', 'Opportunities', 'Things to find when you’re nearby.'],
+  opportunities: ['Opportunities', 'Opportunities', 'Note something you’re looking for and where to look. Share it with AI to get real place suggestions nearby; accept one here, then confirm it on your phone to be notified when you’re close.'],
   agents: ['Shared with AI', 'A little help, on your terms.', 'The notes and lists you’ve invited your agents to work with.'],
   conflicts: ['Needs review', 'Two devices, one field.', 'Changes made at the same time on different devices. Pick the version to keep.'],
   archive: ['Archive', 'Off your mind. Still here.', 'Finished projects and thoughts you might come back to.'],
@@ -75,6 +75,11 @@ function proposalsHtml(note) {
   const accepted = note.proposals.filter(p => p.status === 'accepted');
   return accepted.map(p => `<span class="tag reminder">${icon('pin')}${escape(p.label)} · accepted</span>`).join('') + pending.map(p => `<div class="proposal"><div><strong>${escape(p.label)}</strong>${p.address ? `<small>${escape(p.address)}</small>` : ''}<small>${escape(p.reason)}${p.confidence !== undefined ? ` · ${Math.round(p.confidence * 100)}% confident` : ''} · ${p.radius} m</small>${p.evidenceUrl ? `<a href="${escape(p.evidenceUrl)}" target="_blank" rel="noopener noreferrer">Evidence ↗</a>` : ''}</div><div class="proposal-actions"><button type="button" class="secondary" data-action="accept-place" data-id="${note.id}" data-proposal="${p.id}">Accept</button><button type="button" class="text-button" data-action="dismiss-place" data-id="${note.id}" data-proposal="${p.id}">Dismiss</button></div></div>`).join('');
 }
+async function reviewProposal(note, proposalId, accepted) {
+  await change(note.id, 'place.review', { id: proposalId, status: accepted ? 'accepted' : 'dismissed' });
+  await render(); scheduleSync();
+  toast(accepted ? 'Place accepted. Confirm it on your phone to start monitoring.' : 'Suggestion dismissed.');
+}
 function toast(message) { const notification = $('#toast'); ([...document.querySelectorAll('dialog[open]')].at(-1) || document.body).append(notification); notification.textContent = message; notification.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { notification.hidden = true; }, 5500); }
 const attempt = fn => async event => { try { await fn(event); } catch (error) { console.error(error.message); toast(error.message); } };
 function humanDate(at) { return new Date(at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
@@ -100,6 +105,9 @@ async function render() {
   notes = fetched;
   aiPermissions = materializeAgentPermissions(ops);
   renderAiPermissions();
+  // When automatic AI viewing is on, every active note is already visible to AI, so the individually-shared
+  // view is redundant with All notes -- keep it reachable only if the user is already on it.
+  $('#agents-nav').hidden = aiPermissions.readAll && view !== 'agents';
   folders = materializeFolders(ops);
   ownDeviceId ??= await settings.get('deviceId');
   renderFolderNavigation();
@@ -220,6 +228,7 @@ function openEditor(note = null, mode = 'note', title = '') {
   $('#reminder-type').value = note ? reminder?.type || 'none' : (view === 'opportunities' ? 'opportunity' : view === 'reminders' ? 'time' : 'none');
   $('#reminder-at').value = reminder?.type === 'time' ? new Date(new Date(reminder.at).getTime() - new Date(reminder.at).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
   $('#reminder-query').value = reminder?.query || ''; $('#reminder-place').value = reminder?.place || '';
+  $('#opportunity-proposals').innerHTML = note ? proposalsHtml(note) : '';
   $('.reminder-details').open = $('#reminder-type').value !== 'none';
   $('#editor-heading').textContent = note ? 'Edit note' : 'New note';
   $('#organize-note').open = false; $('#sharing-options').open = false;
@@ -259,6 +268,12 @@ $('#editor-form').addEventListener('submit', attempt(async event => {
 }));
 $('#edit-items').addEventListener('input', event => { const el = event.target; if (el.dataset.field) draftItems[Number(el.dataset.index)][el.dataset.field] = el.type === 'checkbox' ? el.checked : el.value; });
 $('#edit-items').addEventListener('click', event => { const el = event.target.closest('[data-remove-item]'); if (el) { draftItems.splice(Number(el.dataset.removeItem), 1); renderItems(); updateEditorStatus(); } });
+$('#opportunity-proposals').addEventListener('click', attempt(async event => {
+  const el = event.target.closest('[data-action]'); if (!el || !current || !['accept-place', 'dismiss-place'].includes(el.dataset.action)) return;
+  await reviewProposal(current, el.dataset.proposal, el.dataset.action === 'accept-place');
+  const refreshed = notes.find(n => n.id === current.id);
+  if (refreshed) { current = structuredClone(refreshed); $('#opportunity-proposals').innerHTML = proposalsHtml(current); }
+}));
 $('#add-item').onclick = () => { draftItems.push({ id: crypto.randomUUID(), text: '', checked: false, order: draftItems.length }); renderItems(); updateEditorStatus(); $('#edit-items .edit-item:last-child input[type=text]').focus(); };
 document.querySelectorAll('[data-kind]').forEach(el => { el.onclick = () => { kind = el.dataset.kind; renderKind(); updateEditorStatus(); }; });
 $('#edit-body').addEventListener('input', renderMarkdownPreview);
@@ -302,9 +317,7 @@ $('#notes-container').onclick = attempt(async event => {
   if (el.dataset.action === 'label') { await navigate(`label:${el.dataset.label}`); return; }
   if (el.dataset.action === 'edit') { if (note.trashed) { toast('Restore this note before editing.'); return; } openEditor(note); return; }
   if (['accept-place', 'dismiss-place'].includes(el.dataset.action)) {
-    const accepted = el.dataset.action === 'accept-place';
-    await change(note.id, 'place.review', { id: el.dataset.proposal, status: accepted ? 'accepted' : 'dismissed' }); await render(); scheduleSync();
-    toast(accepted ? 'Place accepted. Confirm it on your phone to start monitoring.' : 'Suggestion dismissed.');
+    await reviewProposal(note, el.dataset.proposal, el.dataset.action === 'accept-place');
     return;
   }
   const patches = { pin: { pinned: !note.pinned }, archive: { archived: !note.archived }, trash: { trashed: true }, restore: { trashed: false } };
